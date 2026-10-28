@@ -25,6 +25,7 @@ memory/*.db-*
 *.tmp
 *.log
 *.err
+logs/
 tmp_*
 *.png
 

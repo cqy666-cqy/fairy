@@ -1,0 +1,47 @@
+Boot Command: "E:\fariy\chatqq\NapCat.Shell.Windows.OneKey\NapCat.52230.Shell\QQ.exe" --enable-logging -q 3967286818
+[NapCat Backend] Main Process ID:141000
+Creating pipe: \\.\pipe\NapCat_141000
+config_current_version:9.9.33-52230
+config_prev_version:
+load from:E:\fariy\chatqq\NapCat.Shell.Windows.OneKey\NapCat.52230.Shell\versions\9.9.33-52230\QQNT.dll
+NapCat Shell App Loading...
+10-26 18:55:26 [[32minfo[39m] [PacketHandler] 加载成功
+10-26 18:55:26 [[32minfo[39m] [Napi2NativeLoader] 加载成功
+10-26 18:55:26 [[32minfo[39m] [FFmpeg] 检查 Native Addon 可用性...
+10-26 18:55:26 [[32minfo[39m] [FFmpeg] ✓ 使用 Native Addon 适配器
+10-26 18:55:26 [[32minfo[39m] [PacketHandler] 初始化成功
+10-26 18:55:26 [[32minfo[39m] [NapCat] [Core] NapCat.Core Version: 4.18.38
+10-26 18:55:26 [[32minfo[39m] [NapCat] [WebUi] WebUi Token: cd4866c803c3
+10-26 18:55:26 [[32minfo[39m] [NapCat] [WebUi] WebUi User Panel Url: http://127.0.0.1:6099/webui?token=cd4866c803c3
+10-26 18:55:26 [[32minfo[39m] [NapCat] [WebUi] WebUi User Panel Url: http://[::]:6099/webui?token=cd4866c803c3
+10-26 18:55:26 [[32minfo[39m] 等待网络连接...
+10-26 18:55:27 [[32minfo[39m] 网络已连接
+10-26 18:55:27 [[32minfo[39m] 正在快速登录  3967286818
+10-26 18:55:27 [[31merror[39m] 快速登录错误： 登录态已失效，请重新登录。
+10-26 18:55:27 [[32minfo[39m] QQ 3967286818 未配置回退密码环境变量，建议优先使用 ACCOUNT + NAPCAT_QUICK_PASSWORD（NAPCAT_QUICK_PASSWORD_MD5 作为备用），将使用二维码登录方式
+10-26 18:55:27 [[33mwarn[39m] 请扫描下面的二维码，然后在手Q上授权登录：
+10-26 18:55:27 [[33mwarn[39m] 
+
+▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+█ ▄▄▄▄▄ █▄▄███▀▄█▀▀ █▄▄ ▀██ ▄▄▄▄▄ █
+█ █   █ █ ▀█ ▄ █▀ ██ █▀ ▀██ █   █ █
+█ █▄▄▄█ █▄ ▄▄▀▀█▄█▀▄ ▀▀▀███ █▄▄▄█ █
+█▄▄▄▄▄▄▄█▄▀▄▀▄█ █ ▀▄▀ █ ▀▄█▄▄▄▄▄▄▄█
+█ ▄  ▀█▄█▄▀████▀▄██▄█▀▄█ ▄▄▀█▄▄ ▀ █
+█ █▄▀▀█▄▀▄██▀▀▀▄▀█▄▀█▀▄▀▄ █ ▀▄█▄ ▄█
+█▄▀█ ▀█▄▀█▄▀ █▄█ ▀█▀▀█▄▄█▀▄█▄▄ ▀▀██
+█▀ ▄██▄▄█  ██ ▄██ ▄▀ ▄  █▄▀  ▄█ ███
+█▀▀▀███▄▄ ▀▀▄▀  ▀▀█▄▀   ▀▀      ▄ █
+█▀ ▀▄▀ ▄▄▀██▄ █▀ █ ▄▀▄██▀▀  ██ █▄▀█
+█ ▀▀█▀█▄ ▀ ▀▄ █▀ ▀█  ▄▀▀  ▄▀▄█▀▄▀▀█
+██▀█   ▄▀▀██▄▄▀ █▄█▄██▄  ▄▄▀▀▄▀▄ ▄█
+█▄█▄█▄█▄▄▀▄ ▀ ▄█  ▄█▀█ ▄  ▄▄▄ ▄██▄█
+█ ▄▄▄▄▄ ██▄  ██▄▀█▄█▄▀▀   █▄█ ▀▀███
+█ █   █ █▀█▄██  ▄█ ▄▀ ▄█  ▄▄▄▄█  ▄█
+█ █▄▄▄█ █  ▄▀ █▀▄▀▀▄█▄▄▀▄▀▄ ▄▀█▄▄▀█
+█▄▄▄▄▄▄▄█▄█▄█▄█████▄▄▄▄▄██▄███▄▄███
+
+二维码解码URL: https://txz.qq.com/p?k=mux8TCjCjVI15Dc7CgKiDZQZbFkHTIuZ&f=1600001604
+如果控制台二维码无法扫码，可以复制解码url到二维码生成网站生成二维码再扫码，也可以打开下方的二维码路径图片进行扫码。
+10-26 18:55:27 [[33mwarn[39m] 二维码已保存到 E:\fariy\chatqq\NapCat.Shell.Windows.OneKey\NapCat.52230.Shell\versions\9.9.33-52230\resources\app\napcat\cache\qrcode.png
+[NapCat Backend] Process resumed

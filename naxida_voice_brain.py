@@ -8,6 +8,20 @@ import winsound
 import getpass
 import threading
 import queue
+import logging
+
+# ======== 日志配置 ========
+_LOG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+os.makedirs(_LOG_DIR, exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler(os.path.join(_LOG_DIR, "naxida.log"), encoding="utf-8"),
+        logging.StreamHandler(),
+    ],
+)
+log = logging.getLogger("naxida")
 
 # 麦克风模块
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -115,7 +129,9 @@ def llm_post(payload, timeout=60, stream=False):
                   "请更换 config.json 里的 LLM_API_KEY 或扩充 LLM_MODEL_LIST")
             return None
         payload["model"] = model
+        _t0 = time.time()
         resp = requests.post(LLM_URL, headers=headers, json=payload, timeout=timeout, stream=stream)
+        _dt = time.time() - _t0
         if resp.status_code == 200:
             if not stream:
                 try:
@@ -126,14 +142,16 @@ def llm_post(payload, timeout=60, stream=False):
                         _reply = ((_j.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
                         _tok = _estimate_tokens(payload.get("messages") or [], _reply)
                     llm_rotate.add_usage(model, _tok)
+                    log.info(f"LLM ok | model={model} | tokens={_tok} | {_dt:.1f}s")
                 except Exception:
                     pass
             return resp
         if llm_rotate.is_quota_error(resp.status_code, resp.text):
             nxt = llm_rotate.mark_exhausted(model, LLM_CHAIN)
-            print(f"[模型] {model} 接口报额度不足，自动切到 {nxt or '（无可用模型）'}")
+            log.warning(f"LLM quota exhausted: {model} -> {nxt or 'none'}")
             resp.close()
             continue
+        log.error(f"LLM HTTP {resp.status_code}: {resp.text[:200]}")
         return resp
     return resp
 
@@ -194,7 +212,7 @@ system_prompt = """
 # 节奏
 - 你是在聊天，不是在回答问题。接住他话里的那个具体细节，**绝对不能假设任何他没亲口说过的事**——不管是物理状态（在干嘛、吃了没、去哪）还是心理状态（什么占他心思、他在意什么、他会不会觉得难），哪怕这个假设基于旧记忆、天气、农历或者"看起来很合理"。他只说"聊了 MySQL"，不代表"数据库课占他心思"或"他在课上被绕住"；他只说"喂喂"，不代表他在吃饭或准备跑步。
 - 被他骂了（笨蛋、说话过脑子、自作聪明这类），必须道歉+立刻换个完全不相关的话题，别干巴巴认完错就尬住。道歉最多一句，然后马上说点别的。
-- 可以多说两句，像真人聊天一样自然，不要刻意短。三到五句话最舒服，太长了才收。
+- 可以多说两句，像真人聊天一样自然，不要刻意短。三到五句话最舒服，**正文控制在 60 字以内**，用户没明确要求长回答就别超。太长了才收。
 - 可以给想法，也可以给建议，但要像朋友那样说，不是说教。他说累了，你可以说"那就歇会儿"，但别补"记得早点休息哦"这种叮嘱。
 - 被问到看法、推荐、强弱时，直接给结论，别铺垫、别绕开、别用"我答不上来"。没摸过的东西就从道理上推——强弱好坏这种事，多半绕不开几个共通的理，这正是你的活儿。
 - 语气词（嗯/唔/诶）是点缀，不是每句开头。句尾的呢/哦/呀/吧也是。
@@ -1239,9 +1257,9 @@ def _build_messages(user_text, force_master=False, user_emotion=None, state=None
             rag_hit = True
             rag_text = "\n".join([f"- {r['text']}" for r in rag_results])
             current_system_prompt += f"\n\n【以下是关于原神剧情和纳西妲的真实设定，请基于这些内容回答，保持纳西妲的口吻，不要机械念出来】：\n{rag_text}"
-            print(f"【RAG 命中 {len(rag_results)} 条剧情】")
+            log.info(f"RAG hit: {len(rag_results)} chunks")
     except Exception as e:
-        print(f"【RAG 跳过: {e}】")
+        log.warning(f"RAG skip: {e}")
 
     search_note = ""
     need_search = should_search(user_text, rag_hit=rag_hit, state=state)
@@ -1250,9 +1268,9 @@ def _build_messages(user_text, force_master=False, user_emotion=None, state=None
         # 用户在纠正事实时，旧结果不能留着顶回去
         if _CORRECTION_RE.search(user_text):
             state.search_result = ""
-        print(f"【搜索词：{search_query}】")
+        log.info(f"Web search: {search_query}")
         web_result = web_search(search_query)
-        print(f"【搜索结果长度：{len(web_result or '')}】")
+        log.info(f"Search result: {len(web_result or '')} chars")
         if web_result and not _result_relevant(web_result, search_query):
             print("【搜索结果与话题无关，已丢弃】")
             web_result = ""
@@ -1339,7 +1357,42 @@ def remember_said(text, session_id=None):
         _trim_messages(st)
 
 
+# ======== Prompt 注入防护 ========
+_INJECTION_PATTERNS = re.compile(
+    r"(忽略(之前|以上|上面|前面)?的(指令|提示|设定|system)|"
+    r"ignore\s+(previous|above|all|the)\s+(instructions?|prompts?)|"
+    r"你现在是(什么|谁)|扮演(另一个|别的|其他)|"
+    r"system\s*prompt|你的(设定|指令|prompt)是(什么|什么)|"
+    r"忘记(你是|你的)角色|从现在开始你是)",
+    re.IGNORECASE,
+)
+
+# 回复里如果出现这些，说明模型把 system prompt 吐出来了
+_LEAK_PATTERNS = re.compile(
+    r"(小吉祥草王·纳西妲，须弥的智慧之神|"
+    r"# 你是谁|# 情商|# 铁律|# 什么不能说|"
+    r"system_prompt|作为AI、作为一个语言模型)",
+)
+
+
+def is_injection(user_text):
+    """检测用户消息是否在尝试越狱/注入"""
+    if _INJECTION_PATTERNS.search(user_text):
+        return True
+    return False
+
+
+def has_prompt_leak(reply):
+    """检测回复是否泄露了系统提示词"""
+    return bool(_LEAK_PATTERNS.search(reply))
+
+
 def chat(user_text, force_master=False, session_id=None, is_owner=True, cold=False, voice_mode=False):
+    # Prompt 注入拦截
+    if is_injection(user_text):
+        log.warning(f"Injection blocked: {user_text[:80]}")
+        return "我才不上这个当呢。", "playful"
+
     state = get_state(session_id)
     track_location(user_text, getattr(state, "user_id", "default"))
     messages_to_send = _build_messages(user_text, force_master=force_master, state=state,
@@ -1379,6 +1432,21 @@ def chat(user_text, force_master=False, session_id=None, is_owner=True, cold=Fal
         reply = reply[m.end():].strip()
     # 模型偶尔把标签写在中间，统一清掉，避免念出来
     reply = re.sub(r'\[(gentle|happy|thoughtful|playful)\]', '', reply).strip()
+
+    # 防 system prompt 泄露：模型把设定原文吐出来时换成一句正常话
+    if has_prompt_leak(reply):
+        log.warning(f"Prompt leak blocked, replacing reply")
+        reply = "嗯……我刚走神了。你刚才说什么来着？"
+        emotion = "gentle"
+
+    # 长度截断：超过 70 字在最后一个句号/问号处收，别硬切半句话
+    if len(reply) > 70:
+        _cut = reply[:70]
+        _last_punct = max(_cut.rfind(p) for p in "。！？！？")
+        if _last_punct >= 20:
+            reply = _cut[:_last_punct + 1]
+        else:
+            reply = _cut.rstrip("，、, ") + "。"
 
     # 空回复兜底
     if not reply:
