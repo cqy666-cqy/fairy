@@ -160,7 +160,8 @@ TTS_URL = "http://127.0.0.1:9880/tts"
 
 # 多情绪参考音频（BWiki 官方原版，已转 wav）
 # 每种情绪：ref_audio_path + prompt_text（必须和音频内容一致）
-REF_DIR = r"E:\fariy\ai\naxida_ai\素材\参考音频\最终"
+_PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+REF_DIR = os.path.join(_PROJECT_ROOT, "素材", "参考音频", "最终")
 EMOTION_DICT = {
     "gentle": {  # 温柔陪伴（默认）
         "ref": os.path.join(REF_DIR, "01_温柔_又有心事吗.wav"),
@@ -1252,7 +1253,13 @@ def _build_messages(user_text, force_master=False, user_emotion=None, state=None
         import rag
         if not rag._chunks:
             rag.load_index()
-        rag_results = rag.retrieve(user_text, top_k=2)
+        # 查询改写：短问句/指代词用上下文补全，提高检索命中率
+        _search_query = user_text
+        if len(user_text) < 12 or re.search(r'(她|他|它|后来|那个|这个|怎么了|怎样了)', user_text):
+            _recent = [m["content"] for m in state.messages[-4:] if m["role"] == "user"]
+            if _recent:
+                _search_query = _recent[-1] + " " + user_text
+        rag_results = rag.retrieve(_search_query, top_k=2)
         if rag_results:
             rag_hit = True
             rag_text = "\n".join([f"- {r['text']}" for r in rag_results])
@@ -1800,7 +1807,7 @@ class _StreamPlayer:
             self._th.join()
 
 
-_AUDIO_LOG_DIR = r"E:\fariy\ai\naxida_ai\audio_log"
+_AUDIO_LOG_DIR = os.path.join(_PROJECT_ROOT, "audio_log")
 
 
 def _safe_filename(text, max_chars=15):

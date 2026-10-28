@@ -5,11 +5,12 @@
 import os, re, json, math, numpy as np
 from collections import Counter
 
-os.environ["MODELSCOPE_CACHE"] = r"E:\fariy\ai\naxida_ai\models\modelscope_cache"
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.environ["MODELSCOPE_CACHE"] = os.path.join(_PROJECT_ROOT, "models", "modelscope_cache")
 os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")  # anaconda 的 MKL 与 torch 共存时会报 OMP 冲突
 
-EMBED_DIR = r"E:\fariy\ai\naxida_ai\models\modelscope_cache\models\BAAI--bge-small-zh-v1.5\snapshots\master"
-RERANK_DIR = r"E:\fariy\ai\naxida_ai\models\modelscope\models\BAAI--bge-reranker-base\snapshots\master"
+EMBED_DIR = os.path.join(_PROJECT_ROOT, "models", "modelscope_cache", "models", "BAAI--bge-small-zh-v1.5", "snapshots", "master")
+RERANK_DIR = os.path.join(_PROJECT_ROOT, "models", "modelscope", "models", "BAAI--bge-reranker-base", "snapshots", "master")
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 INDEX_PATH = os.path.join(DATA_DIR, "index.json")
 VEC_PATH = os.path.join(DATA_DIR, "vectors.npy")

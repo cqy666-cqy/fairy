@@ -65,8 +65,26 @@ GROUP_AT_ONLY = _cfg.get("QQ_GROUP_AT_ONLY", True)
 _NAPCAT_HOST = re.match(r"wss?://([^:/]+):(\d+)", WS_URL)
 NAPCAT_HOST = _NAPCAT_HOST.group(1) if _NAPCAT_HOST else "127.0.0.1"
 NAPCAT_PORT = int(_NAPCAT_HOST.group(2)) if _NAPCAT_HOST else 3001
-NAPCAT_EXE = _cfg.get("NAPCAT_EXE", r"E:\fariy\chatqq\NapCat.Shell.Windows.OneKey\NapCat.52230.Shell\NapCatWinBootMain.exe")
-NAPCAT_DIR = os.path.dirname(NAPCAT_EXE) if os.path.exists(NAPCAT_EXE) else r"E:\fariy\chatqq\NapCat.Shell.Windows.OneKey\NapCat.52230.Shell"
+_paths = _cfg.get("PATHS", {})
+NAPCAT_EXE = _paths.get("NAPCAT_EXE", _cfg.get("NAPCAT_EXE", r"E:\fariy\chatqq\NapCat.Shell.Windows.OneKey\NapCat.52230.Shell\NapCatWinBootMain.exe"))
+NAPCAT_DIR = os.path.dirname(NAPCAT_EXE) if os.path.exists(NAPCAT_EXE) else os.path.dirname(NAPCAT_EXE)
+
+# ---------- 用户反馈存储（/赞 /踩） ----------
+_FEEDBACK_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "state", "feedback.json")
+_last_reply = {}  # user_id -> (question, reply)
+
+def _save_feedback(uid, label, question, reply):
+    os.makedirs(os.path.dirname(_FEEDBACK_PATH), exist_ok=True)
+    data = []
+    if os.path.exists(_FEEDBACK_PATH):
+        try:
+            with open(_FEEDBACK_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            pass
+    data.append({"uid": uid, "label": label, "q": question[:100], "a": reply[:200], "ts": time.strftime("%Y-%m-%d %H:%M")})
+    with open(_FEEDBACK_PATH, "w", encoding="utf-8") as f:
+        json.dump(data[-200:], f, ensure_ascii=False, indent=2)
 
 # 要黑洞的 QQ 静默热更新 host（改 hosts 防 QQ 后台 patch 二进制，打断 NapCat hook）
 _QQ_PATCH_HOSTS = (
@@ -582,7 +600,7 @@ def split_voice(text, soft=20, max_parts=3):
 
 # ---------- TTS 自动拉起：需要出声时 9880 没在运行就自动启动 GPT-SoVITS ----------
 TTS_PORT = 9880
-_SOVITS_DIR = r"E:\fariy\GPT-SoVITS\GPT-SoVITS-v2pro-20261006"
+_SOVITS_DIR = _paths.get("SOVITS_DIR", r"E:\fariy\GPT-SoVITS\GPT-SoVITS-v2pro-20261006")
 _SOVITS_PY = os.path.join(_SOVITS_DIR, "runtime", "python.exe")
 _tts_lock = threading.Lock()
 
@@ -887,6 +905,20 @@ def _handle(event):
 
     print(f"[QQ] 收到 {who}：{text}")
 
+    # /赞 /踩 反馈：对最近一条回复打分
+    if text.strip() in ("/赞", "/踩"):
+        uid = str(user_id)
+        last = _last_reply.get(uid)
+        if not last:
+            client.send_private(user_id, "还没有可以评价的回复呢")
+            return
+        q, a = last
+        label = "up" if text.strip() == "/赞" else "down"
+        _save_feedback(uid, label, q, a)
+        client.send_private(user_id, "收到啦，我记住了" if label == "up" else "呜……我会改进的")
+        print(f"[QQ] 反馈 {who}: {label} | Q: {q[:30]}")
+        return
+
     # 主动陪伴：他来了就算「有回应」，顺便解除降频与暂停
     if is_owner and not is_group and company:
         company.note_user_message(str(user_id))
@@ -1036,6 +1068,13 @@ def _handle(event):
             th.start()
             greet_job = (notify, box, th)
 
+    # 发"正在输入"状态，让用户知道在回复
+    if not is_group:
+        try:
+            client.call_api("set_input_status", {"user_id": int(user_id), "bust": 5})
+        except Exception:
+            pass
+
     try:
         reply, emotion = _reply_for(event, text, voice_mode=want_voice, cold=guarded)
         if not is_owner:
@@ -1107,6 +1146,7 @@ def _handle(event):
             client.send_private(user_id, chunk)
             if i < len(parts) - 1:
                 time.sleep(random.uniform(0.4, 0.8))
+    _last_reply[str(user_id)] = (text, reply)  # 记录供 /赞 /踩 使用
     print(f"[QQ] 已回复 {who}")
 
 

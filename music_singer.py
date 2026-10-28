@@ -11,24 +11,28 @@ import time
 import requests
 from pathlib import Path
 
-# 路径配置
-PROJECT_ROOT = Path(r"E:\fariy\ai\naxida_ai")
-MUSIC_DIR = PROJECT_ROOT / "music"
+# 路径配置（从 config.json 读外部路径，内部路径相对推导）
+_PROJECT_ROOT = Path(os.path.dirname(os.path.abspath(__file__)))
+MUSIC_DIR = _PROJECT_ROOT / "music"
 WORK_DIR = MUSIC_DIR / "work"
-YT_DLP = r"E:\fariy\工具\yt-dlp.exe"
-RVC_PYTHON = r"E:\fariy\ai\RVC\venv\Scripts\python.exe"
-RVC_ROOT = r"E:\fariy\ai\RVC\RVC-WebUI"
-RVC_MODEL = "nahida.pth"
-RVC_INDEX_FILE = r"E:\fariy\ai\RVC\RVC-WebUI\logs\nahida\added_IVF153_Flat_nprobe_1_nahida_v2.index"
 
-# 博查搜索 API（从 config.json 读）
 import json as _msj
 _cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 try:
     with open(_cfg_path, "r", encoding="utf-8") as _f:
-        BOCHA_API_KEY = _msj.load(_f).get("BOCHA_API_KEY", "")
+        _cfg = _msj.load(_f)
 except Exception:
-    BOCHA_API_KEY = ""
+    _cfg = {}
+_paths = _cfg.get("PATHS", {})
+
+YT_DLP = _paths.get("YT_DLP", r"E:\fariy\工具\yt-dlp.exe")
+RVC_PYTHON = _paths.get("RVC_PYTHON", r"E:\fariy\ai\RVC\venv\Scripts\python.exe")
+RVC_ROOT = _paths.get("RVC_ROOT", r"E:\fariy\ai\RVC\RVC-WebUI")
+RVC_MODEL = "nahida.pth"
+RVC_INDEX_FILE = _paths.get("RVC_INDEX", r"E:\fariy\ai\RVC\RVC-WebUI\logs\nahida\added_IVF153_Flat_nprobe_1_nahida_v2.index")
+
+# 博查搜索 API
+BOCHA_API_KEY = _cfg.get("BOCHA_API_KEY", "")
 
 
 _BILI_HEADERS = {
