@@ -1,0 +1,22 @@
+# HTTP / WebSocket
+requests>=2.31
+websocket-client>=1.6
+flask>=3.0
+flask-cors>=4.0
+
+# 科学计算 / ML
+numpy>=1.24
+torch>=2.0
+transformers>=4.40
+scikit-learn>=1.3
+modelscope>=1.9
+
+# 语音
+funasr>=1.0
+sounddevice>=0.4.6
+
+# 工具
+cnlunar>=1.0
+
+# 测试
+pytest>=8.0

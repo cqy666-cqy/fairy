@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>纳西妲 · 智慧之神</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    height: 100vh; overflow: hidden;
+    background: var(--bg-grad);
+    --bg-grad: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 50%, #e0f2f1 100%);
+    --panel-bg: rgba(255,255,255,0.85);
+    --header-grad: linear-gradient(90deg, #66bb6a, #81c784);
+    --text-main: #2e7d32;
+    --text-sub: #666;
+    --status-text: #66bb6a;
+    --portrait-bg: rgba(255,255,255,0.4);
+    --portrait-border: #a5d6a7;
+    --avatar-bg: #c8e6c9;
+    --avatar-u-bg: #fff9c4;
+    --bubble-n-bg: white;
+    --bubble-n-text: #2e7d32;
+    --bubble-u-bg: #66bb6a;
+    --bubble-u-text: white;
+    --tag-bg: #e8f5e9;
+    --tag-text: #66bb6a;
+    --input-bg: white;
+    --input-border: #c8e6c9;
+    --divider: #e0e0e0;
+    --mic-bg: #fff9c4;
+    --mic-text: #f9a825;
+    --modal-bg: white;
+    --hint-text: #9e9e9e;
+  }
+  /* 深色模式：只覆盖变量 */
+  body.dark {
+    --bg-grad: linear-gradient(135deg, #1b2e20 0%, #182219 50%, #14201d 100%);
+    --panel-bg: rgba(30, 40, 33, 0.88);
+    --header-grad: linear-gradient(90deg, #2e5d38, #3a6e46);
+    --text-main: #a5d6a7;
+    --text-sub: #8fa898;
+    --status-text: #81c784;
+    --portrait-bg: rgba(40, 55, 45, 0.5);
+    --portrait-border: #3a6e46;
+    --avatar-bg: #2a3d2f;
+    --avatar-u-bg: #4a4630;
+    --bubble-n-bg: #243328;
+    --bubble-n-text: #c8e6c9;
+    --bubble-u-bg: #3a6e46;
+    --bubble-u-text: #e8f5e9;
+    --tag-bg: #2a3d2f;
+    --tag-text: #81c784;
+    --input-bg: #243328;
+    --input-border: #3a5c44;
+    --divider: #2e4034;
+    --mic-bg: #3a3d28;
+    --mic-text: #d4c96a;
+    --modal-bg: #1f2b24;
+    --hint-text: #6b7f70;
+  }
+  /* 背景立绘水印 */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background: url('/static/assets/bg.png') center/cover no-repeat;
+    opacity: 0.18;
+    z-index: 0;
+  }
+  body.dark::before { opacity: 0.08; }
+  .container {
+    position: relative; z-index: 1;
+    display: flex; height: 100vh;
+    padding: 20px; gap: 20px;
+    max-width: 1400px; margin: 0 auto;
+  }
+
+  /* 左边纳西妲立绘 */
+  .side {
+    width: 320px; flex-shrink: 0;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center;
+  }
+  .portrait {
+    width: 300px; height: 520px;
+    border-radius: 20px;
+    background: var(--portrait-bg);
+    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.25);
+    overflow: hidden;
+    border: 3px solid var(--portrait-border);
+    transition: all 0.4s;
+    position: relative;
+  }
+  .portrait canvas { width: 100%; height: 100%; display: block; }
+  .portrait.speaking { border-color: #66bb6a; box-shadow: 0 8px 48px rgba(76, 175, 80, 0.5); }
+  .portrait.loading canvas { opacity: 0.3; }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 8px 32px rgba(76, 175, 80, 0.25); }
+    50% { box-shadow: 0 8px 48px rgba(76, 175, 80, 0.6); }
+  }
+  .name {
+    margin-top: 16px; font-size: 22px; font-weight: bold; color: var(--text-main);
+  }
+  .status {
+    margin-top: 6px; font-size: 13px; color: var(--status-text);
+  }
+
+  /* 右边聊天区 */
+  .chat-wrap {
+    flex: 1; display: flex; flex-direction: column;
+    background: var(--panel-bg);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+  }
+  .chat-header {
+    padding: 12px 24px;
+    background: var(--header-grad);
+    color: white; font-weight: bold; font-size: 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .chat-tools {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: normal;
+  }
+  .tool-btn {
+    background: rgba(255,255,255,0.2); border: none; border-radius: 8px;
+    padding: 4px 8px; cursor: pointer; font-size: 14px; color: white;
+    transition: background 0.2s;
+  }
+  .tool-btn:hover { background: rgba(255,255,255,0.35); }
+  .tool-rate { display: flex; align-items: center; gap: 4px; opacity: 0.95; }
+  .tool-rate input[type=range] { width: 70px; cursor: pointer; }
+  .tool-rate b { min-width: 26px; text-align: right; }
+  .messages {
+    flex: 1; overflow-y: auto; padding: 20px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .msg {
+    display: flex; gap: 10px; max-width: 80%;
+    animation: fadeUp 0.3s;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg .avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--avatar-bg); overflow: hidden; flex-shrink: 0;
+  }
+  .msg .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .msg.user .avatar { background: var(--avatar-u-bg); }
+  .bubble {
+    padding: 12px 16px; border-radius: 16px;
+    line-height: 1.6; font-size: 15px;
+  }
+  .msg.naxida .bubble {
+    background: var(--bubble-n-bg); color: var(--bubble-n-text);
+    border-top-left-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .msg.user .bubble {
+    background: var(--bubble-u-bg); color: var(--bubble-u-text);
+    border-top-right-radius: 4px;
+  }
+  .emotion-tag {
+    display: inline-block; font-size: 11px; padding: 2px 8px;
+    border-radius: 10px; background: var(--tag-bg); color: var(--tag-text);
+    margin-bottom: 4px; margin-right: 6px;
+  }
+  .typing { color: var(--hint-text); font-style: italic; }
+  .dot { display: inline-block; animation: blink 1.4s infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%, 60%, 100% { opacity: 0.3; } 30% { opacity: 1; } }
+
+  /* 输入区 */
+  .input-bar {
+    padding: 16px 20px;
+    border-top: 1px solid var(--divider);
+    display: flex; gap: 10px; align-items: center;
+    background: var(--input-bg);
+  }
+  .input-bar input {
+    flex: 1; padding: 12px 16px;
+    border: 2px solid var(--input-border); border-radius: 24px;
+    outline: none; font-size: 15px;
+    transition: border-color 0.2s;
+    background: transparent; color: var(--text-main);
+  }
+  .input-bar input:focus { border-color: #66bb6a; }
+  .btn {
+    padding: 10px 18px; border: none; border-radius: 24px;
+    cursor: pointer; font-size: 14px; font-weight: bold;
+    transition: all 0.2s;
+  }
+  .btn-send { background: #66bb6a; color: white; }
+  .btn-send:hover { background: #4caf50; }
+  .btn-mic {
+    background: var(--mic-bg); color: var(--mic-text);
+    width: 44px; height: 44px; padding: 0;
+    border-radius: 50%; font-size: 18px;
+  }
+  .btn-mic.recording { background: #ef5350; color: white; animation: pulse 1s infinite; }
+
+  /* 密码弹框 */
+  .modal-mask {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: center; justify-content: center; z-index: 9999;
+  }
+  .modal-mask.show { display: flex !important; }
+  .modal {
+    background: var(--modal-bg); padding: 30px; border-radius: 16px;
+    width: 340px; text-align: center;
+  }
+  .modal h3 { color: var(--text-main); margin-bottom: 12px; }
+  .modal p { color: var(--text-sub); font-size: 13px; margin-bottom: 16px; }
+  .modal input {
+    width: 100%; padding: 10px; border: 2px solid var(--input-border);
+    border-radius: 8px; outline: none; margin-bottom: 12px;
+    font-size: 15px; background: transparent; color: var(--text-main);
+  }
+  .modal .err { color: #e53935; font-size: 12px; min-height: 16px; margin-bottom: 8px; }
+  .sys-hint { text-align: center; font-size: 12px; color: var(--hint-text); margin: 6px 0; }
+
+  /* 记忆面板 */
+  .mem-h { font-size: 13px; color: var(--status-text); margin: 12px 0 6px; }
+  .mem-item {
+    font-size: 13px; color: var(--text-main); padding: 5px 8px;
+    background: var(--tag-bg); border-radius: 8px; margin-bottom: 5px;
+    word-break: break-all;
+  }
+  .mem-item.mem-user { opacity: 0.85; }
+  .mem-empty { font-size: 12px; color: var(--hint-text); padding: 8px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="side">
+    <div class="portrait loading" id="portrait">
+      <canvas id="live2d-canvas"></canvas>
+    </div>
+    <div class="name">纳西妲</div>
+    <div class="status" id="status">小吉祥草王 · 智慧之神</div>
+  </div>
+
+  <div class="chat-wrap">
+    <div class="chat-header">
+      <span>🌿 与纳西妲的对话</span>
+      <div class="chat-tools">
+        <span class="tool-rate">语速 <input type="range" id="rateSlider" min="0.8" max="1.2" step="0.1" value="1"><b id="rateVal">1.0</b>x</span>
+        <button class="tool-btn" id="stopBtn" title="打断纳西妲（停止说话）">⏹</button>
+        <button class="tool-btn" id="wakeBtn" title="唤醒词：说“纳西妲”自动唤醒（默认关闭）">💤</button>
+        <button class="tool-btn" id="muteBtn" title="静音（只看文字）">🔊</button>
+        <button class="tool-btn" id="exportBtn" title="导出对话为 txt">📄</button>
+        <button class="tool-btn" id="memoryBtn" title="看看纳西妲记住了什么">🧠</button>
+        <button class="tool-btn" id="darkBtn" title="深色模式">🌙</button>
+      </div>
+    </div>
+    <div class="messages" id="messages">
+      <div class="msg naxida" id="greetingMsg">
+        <div class="avatar"><img src="/static/assets/avatar.png"></div>
+        <div class="bubble">你好呀，我是纳西妲。有什么想聊的，都可以告诉我哦。</div>
+      </div>
+    </div>
+    <div class="input-bar">
+      <button class="btn btn-mic" id="micBtn" title="按住说话">🎤</button>
+      <input id="input" placeholder="说点什么...（回车发送）">
+      <button class="btn btn-send" id="sendBtn">发送</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="pwdModal">
+  <div class="modal">
+    <h3>🔒 主人验证</h3>
+    <p id="pwdTip">这个请求需要密码才能继续</p>
+    <input type="password" id="pwdInput" placeholder="输入密码">
+    <div class="err" id="pwdErr"></div>
+    <button class="btn btn-send" id="pwdOk" style="width:100%">确认</button>
+  </div>
+</div>
+
+<div class="modal-mask" id="memModal">
+  <div class="modal" style="width:420px; text-align:left; max-height:70vh; display:flex; flex-direction:column;">
+    <h3>🧠 纳西妲的记忆</h3>
+    <div style="overflow-y:auto; flex:1;">
+      <div class="mem-h">关于你的画像</div>
+      <div id="memProfile"><div class="mem-empty">加载中...</div></div>
+      <div class="mem-h">最近对话</div>
+      <div id="memRecent"></div>
+    </div>
+    <button class="btn btn-send" id="memClose" style="width:100%; margin-top:12px;">关闭</button>
+  </div>
+</div>
+
+<!-- Live2D 库（本地离线） -->
+<script src="/static/live2d/lib/live2dcubismcore.min.js?v=2"></script>
+<script>window.Live2DCubismCore = window.Live2DCubismCore || window.live2dcubismcore;</script>
+<script src="/static/live2d/lib/pixi.min.js?v=2"></script>
+<script src="/static/live2d/lib/pixi-live2d-display-cubism4.min.js?v=2"></script>
+
+<script>
+const $ = id => document.getElementById(id);
+const msgs = $('messages');
+let pendingHijackText = null;
+let mediaRecorder = null;
+let audioChunks = [];
+let sending = false;  // 防重复点击
+
+// ===== Live2D 初始化 =====
+
+let live2dApp = null, live2dModel = null, eyeBlinkTimer = null, idleTimer = null;
+
+// 参数控制器：统一管理参数，支持优先级抢占
+// 所有写入挂到 internalModel 渲染循环内执行（同帧生效），避免独立 rAF 与库渲染竞争导致抖动
+const paramCtrl = {
+  targets: {}, current: {}, owners: {}, mouseOffset: {},
+  priority: { idle: 2, interact: 3 },
+  startTime: performance.now(),
+  lipVolume: 0,     // 口型音量 0-1（由 setLipVolume 更新）
+  face: {},         // 当前表情参数状态（由 setEmotion 更新）
+  _rest: {},        // 手/翅膀/身体的默认姿态（首帧记录）
+  _restDone: false,
+  _hooked: false,
+  _blinkAt: -10, _blinkNext: 2,
+
+  // 底噪：多层正弦波叠加，角色永远不会完全静止
+  baseValue(id, t) {
+    switch (id) {
+      case 'ParamAngleX':    return Math.sin(t * 0.5) * 4 + Math.sin(t * 1.3) * 2;
+      case 'ParamAngleY':    return Math.sin(t * 0.7 + 1) * 3 + Math.sin(t * 1.1) * 1.5;
+      case 'ParamAngleZ':    return Math.sin(t * 0.3 + 2) * 5 + Math.sin(t * 0.9) * 2.5;
+      case 'ParamBodyAngleX':return Math.sin(t * 0.4 + 0.5) * 3 + Math.sin(t * 1.5) * 1;
+      case 'ParamBodyAngleY':return (this._rest.ParamBodyAngleY || 0) + Math.sin(t * 0.5 + 1) * 2.2;
+      case 'ParamBodyAngleZ':return (this._rest.ParamBodyAngleZ || 0) + Math.sin(t * 0.35 + 0.8) * 2.5;
+      case 'Param16':        return (this._rest.Param16 || 0) + Math.sin(t * 0.9 + 1) * 0.3 + Math.sin(t * 2.1) * 0.08;
+      case 'Param17':        return (this._rest.Param17 || 0) + Math.sin(t * 0.85 + 2.2) * 0.3 + Math.sin(t * 1.9 + 1) * 0.08;
+      case 'Param18':        return (this._rest.Param18 || 0) + Math.sin(t * 0.7 + 0.5) * 0.35;
+      case 'ParamEyeBallX':  return Math.sin(t * 0.6 + 3) * 0.4;
+      case 'ParamEyeBallY':  return Math.sin(t * 0.8 + 1) * 0.4;
+      default: return 0;
+    }
+  },
+
+  request(id, value, owner) {
+    const cur = this.owners[id];
+    if (cur && this.priority[cur] > this.priority[owner]) return false;
+    this.targets[id] = value; this.owners[id] = owner; return true;
+  },
+  releaseAll(owner) {
+    for (const id in this.owners) if (this.owners[id] === owner) this.owners[id] = null;
+  },
+
+  // 每帧统一写参数（同帧生效，库的呼吸/眨眼不会再和我打架）
+  apply() {
+    if (!live2dModel) return;
+    let core;
+    try { core = live2dModel.internalModel.coreModel; } catch (e) { return; }
+    const norm = window._normParam || ((id, v) => v);
+    const t = (performance.now() - this.startTime) / 1000;
+    const put = (id, v) => { try { core.setParameterValueById(id, v); } catch (e) {} };
+
+    // 首帧记录手/翅膀/身体的默认姿态（之后一切微动都围绕默认值）
+    if (!this._restDone) {
+      ['Param16', 'Param17', 'Param18', 'ParamBodyAngleY', 'ParamBodyAngleZ'].forEach(id => {
+        try {
+          const v = core.getParameterValueById(id);
+          this._rest[id] = isNaN(v) ? 0 : v;
+        } catch (e) { this._rest[id] = 0; }
+      });
+      this._restDone = true;
+    }
+
+    // 呼吸（持续）
+    put('ParamBreath', norm('ParamBreath', 0.5 + 0.5 * Math.sin(t * 1.2)));
+
+    // 表情状态（每帧写入保证稳定，表情接管眼睛时不自动眨眼）
+    let eyesTaken = false;
+    for (const id in this.face) {
+      if (id === '_eyes') { eyesTaken = true; continue; }
+      const f = this.face[id];
+      put(id, f.fx ? f.value : norm(id, f.value));
+    }
+
+    // 自动眨眼（状态机，按时间计算，无独立循环）
+    if (!eyesTaken) {
+      if (t >= this._blinkNext) { this._blinkAt = t; this._blinkNext = t + 2 + Math.random() * 4; }
+      const dt = t - this._blinkAt;
+      if (dt >= 0 && dt < 0.15) {
+        const v = dt < 0.075 ? 1 - dt / 0.075 : (dt - 0.075) / 0.075;
+        put('ParamEyeLOpen', norm('ParamEyeLOpen', v));
+        put('ParamEyeROpen', norm('ParamEyeROpen', v));
+      }
+    }
+
+    // 口型同步
+    put('ParamMouthOpenY', norm('ParamMouthOpenY', this.lipVolume));
+
+    // 头部/身体/手/翅膀/眼球：全状态统一缓动（任何切换/释放都不瞬移）
+    const ids = ['ParamAngleX','ParamAngleY','ParamAngleZ','ParamBodyAngleX','ParamBodyAngleY','ParamBodyAngleZ','ParamEyeBallX','ParamEyeBallY','Param16','Param17','Param18'];
+    for (const id of ids) {
+      const owner = this.owners[id];
+      let desired, k;
+      if (owner === 'interact' || owner === 'idle') {
+        // 互动/待机动作：缓动到目标姿态
+        desired = this.targets[id];
+        k = owner === 'interact' ? 0.18 : 0.12;
+      } else {
+        // 自由状态：底噪 + 鼠标偏移（缓动跟随，眼神像真人一样略带延迟）
+        desired = this.baseValue(id, t) + (this.mouseOffset[id] || 0);
+        k = 0.1;
+      }
+      const cur = this.current[id] ?? desired;
+      const value = cur + (desired - cur) * k;
+      this.current[id] = value;
+      put(id, value);
+    }
+  },
+
+  // 挂到渲染循环：优先用库的官方钩子，失败则包装 update
+  attach(internalModel) {
+    const self = this;
+    try {
+      internalModel.on('beforeModelUpdate', () => { self._hooked = true; self.apply(); });
+    } catch (e) {}
+    const orig = internalModel.update.bind(internalModel);
+    internalModel.update = function (dt, now) {
+      if (!self._hooked) { try { self.apply(); } catch (e) {} }
+      return orig(dt, now);
+    };
+  }
+};
+
+try {
+  live2dApp = new PIXI.Application({
+    view: $('live2d-canvas'),
+    width: 300, height: 520,
+    backgroundAlpha: 0,
+    autoStart: true,
+    resolution: window.devicePixelRatio || 1,
+  });
+
+  PIXI.live2d.Live2DModel.from('/static/live2d/nahida/Nahida.model3.json', { autoInteract: false })
+    .then(model => {
+      live2dApp.stage.addChild(model);
+      // 自动适配：模型高度占画布 92%，居中
+      const naturalH = model.height;
+      model.scale.set((520 * 0.92) / naturalH);
+      model.x = live2dApp.screen.width / 2;
+      model.y = live2dApp.screen.height / 2;
+      model.anchor.set(0.5, 0.5);
+      model.interactive = true;
+      model.buttonMode = true;
+      live2dModel = model;
+      $('portrait').classList.remove('loading');
+
+      // 缓存关键参数范围（不同模型 min/max 不同，眨眼/口型需归一化）
+      try {
+        const core = model.internalModel.coreModel;
+        window._paramRanges = {};
+        const ids = core._parameterIds;
+        ['ParamEyeLOpen','ParamEyeROpen','ParamMouthOpenY','ParamMouthForm','ParamEyeLSmile','ParamEyeRSmile','ParamBreath'].forEach(id => {
+          const i = ids.indexOf(id);
+          if (i >= 0) window._paramRanges[id] = { min: core._parameterMinimumValues[i], max: core._parameterMaximumValues[i] };
+        });
+        window._normParam = (id, v) => {
+          const r = window._paramRanges[id];
+          if (!r) return v;
+          return r.min + Math.max(0, Math.min(1, v)) * (r.max - r.min);
+        };
+      } catch (e) {}
+
+      startIdleMotion();
+      bindTouchInteraction();
+      bindMouseFollow();
+      paramCtrl.attach(model.internalModel);
+
+      try {
+        const core = model.internalModel.coreModel;
+        const count = core.getParameterCount();
+        const params = [];
+        for (let i = 0; i < count; i++) params.push(core.getParameterId(i));
+        console.log('Live2D 可用参数:', params);
+      } catch (e) {}
+    })
+    .catch(err => {
+      console.error('Live2D 加载失败:', err);
+      $('status').textContent = '立绘加载失败（不影响聊天）';
+    });
+} catch (e) {
+  console.error('Live2D 初始化异常:', e);
+  $('status').textContent = '立绘初始化失败（不影响聊天）';
+}
+
+// 鼠标跟随（自己实现，避免 autoInteract 覆盖动画）
+function bindMouseFollow() {
+  const canvas = $('live2d-canvas');
+  canvas.addEventListener('mousemove', (e) => {
+    if (!live2dModel) return;
+    const rect = canvas.getBoundingClientRect();
+    const nx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+    const ny = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    // 只记录偏移量，每帧由 paramCtrl 缓动跟随（不瞬移）
+    paramCtrl.mouseOffset['ParamAngleX'] = nx * 10;
+    paramCtrl.mouseOffset['ParamAngleY'] = -ny * 6;
+    paramCtrl.mouseOffset['ParamEyeBallX'] = nx * 1.5;
+    paramCtrl.mouseOffset['ParamEyeBallY'] = -ny * 1.5;
+  });
+  canvas.addEventListener('mouseleave', () => {
+    paramCtrl.mouseOffset['ParamAngleX'] = 0;
+    paramCtrl.mouseOffset['ParamAngleY'] = 0;
+    paramCtrl.mouseOffset['ParamEyeBallX'] = 0;
+    paramCtrl.mouseOffset['ParamEyeBallY'] = 0;
+  });
+}
+
+// 安全设置参数（参数不存在时静默跳过）
+function setParam(id, value) {
+  if (!live2dModel) return;
+  try {
+    const core = live2dModel.internalModel.coreModel;
+    core.setParameterValueById(id, value);
+  } catch (e) {}
+}
+
+// 随机待机小动作（优先级 idle，会被点击互动抢占）
+function startIdleMotion() {
+  function nextIdle() {
+    if (!live2dModel) { idleTimer = setTimeout(nextIdle, 3000); return; }
+    // 大幅动作：明显的头部转动和身体倾斜
+    const headX = (Math.random() - 0.5) * 30;      // -15~15
+    const headY = (Math.random() - 0.5) * 16;      // -8~8
+    const headZ = (Math.random() - 0.5) * 24;      // -12~12
+    const bodyX = (Math.random() - 0.5) * 16;      // -8~8
+    const eyeX = (Math.random() - 0.5) * 3;
+    const eyeY = (Math.random() - 0.5) * 3;
+    paramCtrl.request('ParamAngleX', headX, 'idle');
+    paramCtrl.request('ParamAngleY', headY, 'idle');
+    paramCtrl.request('ParamAngleZ', headZ, 'idle');
+    paramCtrl.request('ParamBodyAngleX', bodyX, 'idle');
+    paramCtrl.request('ParamEyeBallX', eyeX, 'idle');
+    paramCtrl.request('ParamEyeBallY', eyeY, 'idle');
+    // 手/翅膀/身体前后倾也参与随机小动作（围绕默认姿态）
+    const rest = paramCtrl._rest;
+    paramCtrl.request('Param16', (rest.Param16 || 0) + (Math.random() - 0.5) * 0.9, 'idle');
+    paramCtrl.request('Param17', (rest.Param17 || 0) + (Math.random() - 0.5) * 0.9, 'idle');
+    paramCtrl.request('Param18', (rest.Param18 || 0) + (Math.random() - 0.5) * 0.7, 'idle');
+    paramCtrl.request('ParamBodyAngleY', (rest.ParamBodyAngleY || 0) + (Math.random() - 0.5) * 8, 'idle');
+    paramCtrl.request('ParamBodyAngleZ', (rest.ParamBodyAngleZ || 0) + (Math.random() - 0.5) * 10, 'idle');
+
+    // 2.5 秒后释放，回归底噪微动
+    setTimeout(() => paramCtrl.releaseAll('idle'), 2500);
+
+    // 20% 概率换表情
+    if (Math.random() < 0.2) {
+      const emos = ['happy', 'playful', 'thoughtful'];
+      setEmotion(emos[Math.floor(Math.random() * emos.length)]);
+      setTimeout(() => setEmotion('gentle'), 3000);
+    }
+    idleTimer = setTimeout(nextIdle, 4000 + Math.random() * 6000);
+  }
+  idleTimer = setTimeout(nextIdle, 3000);
+}
+
+// 参数渐变动画（easeInOut）
+function animateParam(id, target, duration) {
+  if (!live2dModel) return;
+  try {
+    const core = live2dModel.internalModel.coreModel;
+    const start = core.getParameterValueById(id);
+    if (isNaN(start)) return;
+    const startTime = performance.now();
+    function step(now) {
+      const t = Math.min(1, (now - startTime) / duration);
+      const eased = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+      core.setParameterValueById(id, start + (target - start) * eased);
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  } catch (e) {}
+}
+
+// 触摸/点击互动（按模型整体高度比例分区，换模型不用改坐标）
+function bindTouchInteraction() {
+  if (!live2dModel) return;
+  live2dModel.on('pointerdown', (e) => {
+    if (!live2dModel) return;
+    let relY = 0.5;
+    try {
+      const b = live2dModel.getBounds();
+      relY = (e.data.global.y - b.y) / b.height;   // 0=头顶 1=脚底
+    } catch (err) {}
+
+    if (relY < 0.35) {
+      // 摸头 → 害羞
+      setEmotion('shy');
+      paramCtrl.request('ParamAngleZ', 14, 'interact');
+      paramCtrl.request('ParamAngleY', 8, 'interact');
+      paramCtrl.request('ParamEyeBallX', 0, 'interact');
+      paramCtrl.request('ParamEyeBallY', 0, 'interact');
+      setTimeout(() => { paramCtrl.releaseAll('interact'); setEmotion('gentle'); }, 1800);
+    } else if (relY < 0.72) {
+      // 摸身体 → 随机开心反应
+      const emos = ['happy', 'playful', 'shy'];
+      setEmotion(emos[Math.floor(Math.random() * emos.length)]);
+      paramCtrl.request('ParamAngleY', -12, 'interact');
+      paramCtrl.request('ParamAngleZ', (Math.random() - 0.5) * 10, 'interact');
+      paramCtrl.request('ParamBodyAngleX', (Math.random() - 0.5) * 6, 'interact');
+      paramCtrl.request('ParamBodyAngleY', (paramCtrl._rest.ParamBodyAngleY || 0) - 5, 'interact');
+      paramCtrl.request('Param16', (paramCtrl._rest.Param16 || 0) + 0.5, 'interact');
+      setTimeout(() => { paramCtrl.releaseAll('interact'); setEmotion('gentle'); }, 2000);
+    } else {
+      // 其他 → 疑惑转头
+      setEmotion('thoughtful');
+      const dir = Math.random() > 0.5 ? 18 : -18;
+      paramCtrl.request('ParamAngleX', dir, 'interact');
+      paramCtrl.request('ParamEyeBallX', dir > 0 ? 1.5 : -1.5, 'interact');
+      setTimeout(() => { paramCtrl.releaseAll('interact'); setEmotion('gentle'); }, 1500);
+    }
+  });
+}
+
+// 情绪 → 直接驱动面部参数（不依赖 exp 文件，fx 参数范围 0~30）
+const FX_IDS = ['Param42','Param43','Param44','Param54','Param55','Param59','Param60'];
+function setEmotion(emotion) {
+  if (!live2dModel) return;
+  const F = paramCtrl.face;
+  for (const k in F) delete F[k];
+  const set = (id, v) => { F[id] = { value: v, fx: false }; };
+  const fx = (id, v) => { F[id] = { value: v, fx: true }; };
+
+  switch (emotion) {
+    case 'happy':      // 星星眼
+      set('ParamMouthForm', 1); set('ParamEyeLSmile', 0.6); set('ParamEyeRSmile', 0.6); fx('Param44', 30); break;
+    case 'playful':    // 发光
+      set('ParamMouthForm', 1); set('ParamEyeLSmile', 0.8); set('ParamEyeRSmile', 0.8); fx('Param59', 30); break;
+    case 'thoughtful': // 半眯眼沉思
+      set('ParamEyeLOpen', 0.45); set('ParamEyeROpen', 0.45); set('ParamMouthForm', -0.2); F._eyes = true; break;
+    case 'angry':      // 生气
+      set('ParamMouthForm', -0.8); fx('Param54', 30); break;
+    case 'sad':        // 流泪
+      set('ParamMouthForm', -0.6); fx('Param55', 20); break;
+    case 'shy':        // 害羞脸红
+      set('ParamMouthForm', 0.3); set('ParamEyeLSmile', 0.7); set('ParamEyeRSmile', 0.7); fx('Param43', 25); break;
+    default:           // gentle：自然微笑（不脸红）
+      set('ParamMouthForm', 0.5); set('ParamEyeLSmile', 0.35); set('ParamEyeRSmile', 0.35); break;
+  }
+
+  // 关掉不再使用的 fx 参数（核心参数值会残留，需显式归零）
+  try {
+    const core = live2dModel.internalModel.coreModel;
+    FX_IDS.forEach(id => { if (!F[id]) core.setParameterValueById(id, 0); });
+  } catch (e) {}
+}
+
+// 口型同步：只记录音量，每帧由 paramCtrl.apply 统一写入
+function setLipVolume(v) {
+  paramCtrl.lipVolume = Math.max(0, Math.min(1, v));
+}
+
+// 页面加载时获取定制开场白
+fetch('/api/greeting').then(r => r.json()).then(d => {
+  if (d.greeting) $('greetingMsg').querySelector('.bubble').textContent = d.greeting;
+}).catch(() => {});
+
+function setPortrait(state) {
+  // state: default/waiting/thinking —— 映射到表情
+  const map = {
+    default: 'gentle',
+    waiting: 'thoughtful',
+    thinking: 'thoughtful',
+  };
+  setEmotion(map[state] || 'gentle');
+}
+function setStatus(s) { $('status').textContent = s; }
+function setSpeaking(on) { $('portrait').classList.toggle('speaking', on); }
+
+// 音频播放 + 口型同步
+let audioCtx = null;
+let currentAudio = null;
+let isSinging = false;
+let lipStop = null;   // 当前口型循环的收尾函数（打断时调用，确保状态彻底复位）
+let audioQueue = [];      // 逐句流式播放队列（SSE audio 事件按序入队）
+let queuePlaying = false;
+
+// 打断当前语音（发送新消息 / 停止按钮 / 点麦克风时立刻静音，不用等她说完）
+function stopAudio() {
+  if (currentAudio) {
+    try { currentAudio.pause(); currentAudio.src = ''; } catch (e) {}
+    currentAudio = null;
+  }
+  if (lipStop) { const f = lipStop; lipStop = null; try { f(); } catch (e) {} }
+  setLipVolume(0);
+  setSpeaking(false);
+  isSinging = false;
+}
+
+// 用户主动打断：先清空句子队列再停当前音频（区别于播放链内部的 stopAudio）
+function interruptSpeech() {
+  audioQueue.length = 0;
+  stopAudio();
+}
+
+// 逐句流式播放队列：播完一句自动接下一句，队空才复位状态
+function enqueueAudio(url, emotion) {
+  audioQueue.push({ url, emo: emotion || 'gentle' });
+  pumpQueue();
+}
+function pumpQueue() {
+  if (queuePlaying) return;
+  const item = audioQueue.shift();
+  if (!item) {
+    setSpeaking(false);
+    if (!isSinging) setStatus('小吉祥草王 · 智慧之神');
+    return;
+  }
+  queuePlaying = true;
+  setSpeaking(true);
+  playWithLipSync(item.url, () => { queuePlaying = false; pumpQueue(); }, false, item.emo);
+}
+
+// 系统小提示（居中灰字，如 TTS 失败）
+function addSysHint(text) {
+  const div = document.createElement('div');
+  div.className = 'sys-hint';
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ===== 顶栏工具：语音开关 / 语速 / 导出 / 深色模式 =====
+let muted = localStorage.getItem('naxida_muted') === '1';
+let speechRate = parseFloat(localStorage.getItem('naxida_rate') || '1') || 1;
+
+function applyMuteUI() {
+  $('muteBtn').textContent = muted ? '🔇' : '🔊';
+  $('muteBtn').title = muted ? '开启语音' : '静音（只看文字）';
+}
+$('muteBtn').onclick = () => {
+  muted = !muted;
+  localStorage.setItem('naxida_muted', muted ? '1' : '0');
+  if (muted) interruptSpeech();
+  applyMuteUI();
+};
+
+$('rateSlider').value = speechRate;
+$('rateVal').textContent = speechRate.toFixed(1);
+$('rateSlider').oninput = (e) => {
+  speechRate = parseFloat(e.target.value);
+  $('rateVal').textContent = speechRate.toFixed(1);
+  localStorage.setItem('naxida_rate', String(speechRate));
+  // 正在播的语音立即生效
+  if (currentAudio) {
+    currentAudio.playbackRate = speechRate;
+    try { currentAudio.preservesPitch = true; } catch (err) {}
+  }
+};
+
+$('exportBtn').onclick = () => {
+  const lines = ['与纳西妲的对话记录', '导出时间：' + new Date().toLocaleString(), ''];
+  document.querySelectorAll('#messages .msg').forEach(div => {
+    if (div.id === 'typing') return;
+    const who = div.classList.contains('user') ? '我' : '纳西妲';
+    const emo = div.querySelector('.emotion-tag');
+    const text = div.querySelector('.text');
+    const emoStr = (emo && !div.classList.contains('user')) ? `(${emo.textContent})` : '';
+    lines.push(`${who}${emoStr}：${text ? text.textContent : div.querySelector('.bubble').textContent}`);
+  });
+  const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '纳西妲对话_' + new Date().toISOString().slice(0, 10) + '.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+function applyDarkUI() {
+  const dark = localStorage.getItem('naxida_dark') === '1';
+  document.body.classList.toggle('dark', dark);
+  $('darkBtn').textContent = dark ? '☀️' : '🌙';
+  $('darkBtn').title = dark ? '浅色模式' : '深色模式';
+}
+$('darkBtn').onclick = () => {
+  localStorage.setItem('naxida_dark', document.body.classList.contains('dark') ? '0' : '1');
+  applyDarkUI();
+};
+applyMuteUI();
+applyDarkUI();
+
+// ===== 功能2：打断（停止按钮 + ESC 键）=====
+$('stopBtn').onclick = () => {
+  interruptSpeech();
+  setStatus('已打断');
+  setTimeout(() => setStatus('小吉祥草王 · 智慧之神'), 1200);
+};
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') interruptSpeech(); });
+
+// ===== 功能4：定时提醒（每 20 秒轮询，到点主动播报）=====
+async function pollReminders() {
+  try {
+    const r = await fetch('/api/reminders/due');
+    const d = await r.json();
+    if (d.reminders && d.reminders.length) {
+      for (const rem of d.reminders) {
+        addMsg('naxida', rem.sentence, 'gentle', true);
+        if (rem.audio_url) {
+          enqueueAudio(rem.audio_url, 'gentle');   // 排队播报，不和当前语音打架
+        }
+      }
+    }
+  } catch (e) {}
+}
+setTimeout(pollReminders, 5000);
+setInterval(pollReminders, 20000);
+
+// ===== 功能5：唤醒词（浏览器端，默认关闭，localStorage 持久化）=====
+let wakeOn = localStorage.getItem('naxida_wake') === '1';
+let wakeRecog = null;
+let wakeArmed = false, wakeArmedAt = 0;   // 只叫了名字后，短暂等待下一句指令
+const WAKE_RE = /(纳西妲|纳西达|小草神|小吉祥草王)/;
+
+function applyWakeUI() {
+  const b = $('wakeBtn');
+  b.textContent = wakeOn ? '👂' : '💤';
+  b.title = wakeOn ? '唤醒词已开启：说“纳西妲”叫醒她（点击关闭）' : '唤醒词：说“纳西妲”自动唤醒（默认关闭）';
+}
+
+function startWake() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    addSysHint('当前浏览器不支持唤醒词，请用 Chrome 或 Edge');
+    wakeOn = false; localStorage.setItem('naxida_wake', '0'); applyWakeUI();
+    return;
+  }
+  stopWake();
+  wakeRecog = new SR();
+  wakeRecog.lang = 'zh-CN';
+  wakeRecog.continuous = true;
+  wakeRecog.interimResults = false;
+
+  wakeRecog.onresult = (ev) => {
+    // 她自己正在说话/唱歌时忽略，避免把自己叫醒
+    if (currentAudio || isSinging) return;
+    for (let i = ev.resultIndex; i < ev.results.length; i++) {
+      const res = ev.results[i];
+      if (!res.isFinal) continue;
+      const txt = res[0].transcript.replace(/[，。？！、,.?!\s]/g, '');
+      if (!txt) continue;
+      if (WAKE_RE.test(txt)) {
+        const m = txt.match(WAKE_RE);
+        const cmd = txt.slice(m.index + m[0].length);
+        if (cmd.length >= 1) { wakeArmed = false; sendText(cmd); }
+        else { wakeArmed = true; wakeArmedAt = Date.now(); addSysHint('纳西妲在呢，你说吧～'); }
+      } else if (wakeArmed && Date.now() - wakeArmedAt < 8000) {
+        wakeArmed = false;
+        sendText(txt);
+      }
+    }
+  };
+  wakeRecog.onerror = (e) => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      addSysHint('麦克风权限被拒绝，唤醒词已关闭');
+      wakeOn = false; localStorage.setItem('naxida_wake', '0'); applyWakeUI();
+    }
+  };
+  wakeRecog.onend = () => { if (wakeOn) { try { wakeRecog.start(); } catch (e) {} } };
+  try { wakeRecog.start(); } catch (e) {}
+}
+
+function stopWake() {
+  if (wakeRecog) { try { wakeRecog.onend = null; wakeRecog.stop(); } catch (e) {} wakeRecog = null; }
+  wakeArmed = false;
+}
+
+$('wakeBtn').onclick = () => {
+  wakeOn = !wakeOn;
+  localStorage.setItem('naxida_wake', wakeOn ? '1' : '0');
+  applyWakeUI();
+  if (wakeOn) { startWake(); addSysHint('唤醒词已开启：说“纳西妲”就能叫醒她'); }
+  else { stopWake(); addSysHint('唤醒词已关闭'); }
+};
+applyWakeUI();
+if (wakeOn) startWake();
+
+// 记忆面板：查看纳西妲记住的画像和最近对话
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+$('memoryBtn').onclick = async () => {
+  $('memModal').classList.add('show');
+  $('memProfile').innerHTML = '<div class="mem-empty">加载中...</div>';
+  $('memRecent').innerHTML = '';
+  try {
+    const r = await fetch('/api/memory');
+    const d = await r.json();
+    if (d.profile && d.profile.length) {
+      $('memProfile').innerHTML = d.profile.map(p =>
+        `<div class="mem-item"><b>${escHtml(p.key)}</b>：${escHtml(p.value)}</div>`
+      ).join('');
+    } else {
+      $('memProfile').innerHTML = '<div class="mem-empty">还没有记住你的信息，多聊几句就有了</div>';
+    }
+    if (d.recent && d.recent.length) {
+      $('memRecent').innerHTML = d.recent.map(c =>
+        `<div class="mem-item mem-${c.role}">${c.role === 'user' ? '我' : '纳西妲'}：${escHtml(c.content)}</div>`
+      ).join('');
+    } else {
+      $('memRecent').innerHTML = '<div class="mem-empty">暂无对话记录</div>';
+    }
+  } catch (e) {
+    $('memProfile').innerHTML = '<div class="mem-empty">读取失败</div>';
+  }
+};
+$('memClose').onclick = () => $('memModal').classList.remove('show');
+$('memModal').onclick = (e) => { if (e.target === $('memModal')) $('memModal').classList.remove('show'); };
+
+// 确保音频上下文处于运行状态（浏览器自动播放策略会挂起它，导致彻底静音）
+function ensureAudio() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  } catch (e) {}
+}
+// 任何点击/按键都预热一次（覆盖自动问候语等无手势场景的后续播放）
+window.addEventListener('pointerdown', ensureAudio);
+window.addEventListener('keydown', ensureAudio);
+
+// 情绪 → 语速微调系数（功能6：语音情感。音调本身已由各情绪参考音频决定）
+const EMO_RATE = { happy: 1.06, playful: 1.08, thoughtful: 0.94, gentle: 1.0, sad: 0.92, angry: 1.05, shy: 0.98 };
+
+function playWithLipSync(url, onEnded, isSong, emotion) {
+  try {
+    // 静音模式：跳过语音，直接复位状态
+    if (muted) { if (onEnded) setTimeout(onEnded, 0); return; }
+
+    // 打断上一条，快速连续发消息时不重叠播放
+    stopAudio();
+
+    ensureAudio();
+    const audio = new Audio(url);
+    audio.crossOrigin = 'anonymous';
+    // 唱歌用原速，说话用用户语速 × 情绪系数
+    const emoMul = (!isSong && emotion) ? (EMO_RATE[emotion] || 1.0) : 1.0;
+    audio.playbackRate = isSong ? 1.0 : speechRate * emoMul;
+    if (!isSong) { try { audio.preservesPitch = true; } catch (e) {} }
+    currentAudio = audio;
+
+    const source = audioCtx.createMediaElementSource(audio);
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    let speaking = true;
+    function update() {
+      if (!speaking) return;
+      analyser.getByteFrequencyData(data);
+      const avg = data.reduce((a, b) => a + b, 0) / data.length;
+      setLipVolume(avg / 255);
+      requestAnimationFrame(update);
+    }
+    // 统一收尾：正常结束/加载失败/播放被拦截都走到这里，不会卡在"说话中"
+    function finish() {
+      if (!speaking) return;
+      speaking = false;
+      if (lipStop === finish) lipStop = null;
+      setLipVolume(0);
+      try { source.disconnect(); analyser.disconnect(); } catch (e) {}
+      if (currentAudio === audio) currentAudio = null;
+      setEmotion('gentle');   // 说完后表情复位（功能1）
+      if (onEnded) onEnded();
+    }
+    lipStop = finish;
+    audio.onended = finish;
+    audio.onerror = () => { console.warn('音频加载失败:', url); finish(); };
+    audio.play().catch(err => { console.warn('播放被浏览器拦截:', err && err.name); finish(); });
+    update();
+  } catch (e) {
+    console.warn('播放异常:', e);
+    if (onEnded) onEnded();
+  }
+}
+
+function addMsg(role, text, emotion, typewriter) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'me' ? 'user' : 'naxida');
+  const av = role === 'me'
+    ? '<div class="avatar"><div style="padding-top:8px;text-align:center">你</div></div>'
+    : '<div class="avatar"><img src="/static/assets/avatar.png"></div>';
+  const emoTag = emotion ? `<span class="emotion-tag">${emotion}</span>` : '';
+  div.innerHTML = `${av}<div class="bubble">${emoTag}<span class="text"></span></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // 打字机效果（仅纳西妲消息）
+  if (typewriter && role === 'naxida' && text) {
+    const span = div.querySelector('.text');
+    let i = 0;
+    const timer = setInterval(() => {
+      span.textContent = text.slice(0, i + 1);
+      i++;
+      msgs.scrollTop = msgs.scrollHeight;
+      if (i >= text.length) clearInterval(timer);
+    }, 30);
+  } else {
+    div.querySelector('.text').textContent = text;
+  }
+  return div;
+}
+
+function addTyping() {
+  const div = document.createElement('div');
+  div.className = 'msg naxida';
+  div.id = 'typing';
+  div.innerHTML = `<div class="avatar"><img src="/static/assets/avatar.png"></div>
+    <div class="bubble typing">纳西妲思考中<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping() { const t = $('typing'); if (t) t.remove(); }
+
+async function sendText(text, userEmotion) {
+  if (!text.trim() || sending) return;
+  sending = true;
+  interruptSpeech();  // 发送瞬间打断纳西妲正在说的语音（含句子队列）
+  $('sendBtn').disabled = true;
+  addMsg('me', text);
+  $('input').value = '';
+  setPortrait('thinking'); setStatus('思考中...');
+  addTyping();
+
+  try {
+    const r = await fetch('/api/chat/stream', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text, user_emotion: userEmotion || null})
+    });
+
+    // 先检查是不是 JSON（hijack 或错误）
+    const ct = r.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      const data = await r.json();
+      removeTyping();
+      if (data.hijack_required) {
+        pendingHijackText = data.text;
+        $('pwdModal').classList.add('show');
+        $('pwdInput').value = '';
+        $('pwdErr').text = '';
+        setPortrait('waiting'); setStatus('等待密码验证');
+        setTimeout(() => $('pwdInput').focus(), 100);
+        return;
+      }
+      // 非流式 JSON 回复（如退出主人模式）
+      if (data.reply) {
+        addMsg('naxida', data.reply, data.emotion, true);
+      } else {
+        addMsg('naxida', data.error || '出错了');
+      }
+      if (data.audio_url) {
+        setSpeaking(true);
+        playWithLipSync(data.audio_url, () => { setSpeaking(false); setStatus('小吉祥草王 · 智慧之神'); }, false, data.emotion);
+      } else if (data.reply) {
+        addSysHint('语音合成失败（文字回复正常）');
+      }
+      return;
+    }
+
+    // 是 SSE 流，逐字读
+    removeTyping();
+    const msgDiv = addMsg('naxida', '', 'gentle', false);
+    const textSpan = msgDiv.querySelector('.text');
+    setPortrait('default'); setStatus('在说话...');
+    setSpeaking(true);
+
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullText = '';
+    let audioUrl = null;
+    let emotion = 'gentle';
+    let streamedAudio = 0;   // 逐句流式：已收到的句子音频数
+
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, {stream: true});
+      // 按 \n\n 解析 SSE 事件
+      let idx;
+      while ((idx = buffer.indexOf('\n\n')) >= 0) {
+        const rawEvent = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 2);
+        let eventType = 'message';
+        let dataLine = '';
+        for (const line of rawEvent.split('\n')) {
+          if (line.startsWith('event: ')) eventType = line.slice(7);
+          else if (line.startsWith('data: ')) dataLine = line.slice(6);
+        }
+        if (eventType === 'emotion') {
+          emotion = dataLine;
+          msgDiv.querySelector('.emotion-tag').textContent = emotion;
+          setEmotion(emotion);
+        } else if (eventType === 'audio') {
+          // 逐句流式：收到一句的音频就入队播放
+          try {
+            const a = JSON.parse(dataLine);
+            streamedAudio++;
+            enqueueAudio(a.url, a.emotion || emotion);
+          } catch (e) {}
+        } else if (eventType === 'hint') {
+          addSysHint(dataLine);
+        } else if (eventType === 'done') {
+          try {
+            const d = JSON.parse(dataLine);
+            audioUrl = d.audio_url;
+            emotion = d.emotion || emotion;
+            // 唱歌：直接显示回复文字并标记为歌曲播放
+            if (d.sing) {
+              isSinging = true;
+              fullText = d.reply || '给你唱歌~';
+              textSpan.textContent = fullText;
+              setEmotion('happy');
+              msgDiv.querySelector('.emotion-tag').textContent = 'happy';
+            }
+          } catch(e) {}
+        } else if (eventType === 'error') {
+          textSpan.textContent = '网络出错了...';
+        } else {
+          fullText += dataLine;
+          textSpan.textContent = fullText;
+          msgs.scrollTop = msgs.scrollHeight;
+        }
+      }
+    }
+
+    // 播语音/唱歌
+    if (audioUrl) {
+      // 整段兜底（或唱歌）
+      if (isSinging) setStatus('在唱歌...');
+      playWithLipSync(audioUrl, () => {
+        setSpeaking(false);
+        isSinging = false;
+        setStatus('小吉祥草王 · 智慧之神');
+      }, isSinging, emotion);
+    } else if (streamedAudio > 0) {
+      // 逐句模式：队列播完自动复位；若已播完则立即复位
+      if (!queuePlaying && audioQueue.length === 0) {
+        setSpeaking(false);
+        setStatus('小吉祥草王 · 智慧之神');
+      }
+    } else {
+      setSpeaking(false);
+      isSinging = false;
+      if (fullText) addSysHint('语音合成失败（文字回复正常）');
+      setStatus('小吉祥草王 · 智慧之神');
+    }
+  } catch (e) {
+    removeTyping();
+    addMsg('naxida', '网络好像出了点问题...');
+  } finally {
+    sending = false;
+    $('sendBtn').disabled = false;
+  }
+}
+
+// 密码确认
+$('pwdOk').onclick = async () => {
+  const pw = $('pwdInput').value;
+  const btn = $('pwdOk');
+  btn.disabled = true; btn.textContent = '验证中...';
+  try {
+    const r = await fetch('/api/password', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({password: pw, text: pendingHijackText})
+    });
+    const data = await r.json();
+    if (r.status === 403) {
+      $('pwdErr').textContent = data.error || '密码不对';
+      btn.disabled = false; btn.textContent = '确认';
+      return;
+    }
+    // 立即关弹框，不管后端多慢
+    $('pwdModal').classList.remove('show');
+    btn.disabled = false; btn.textContent = '确认';
+    if (data.reply) {
+      addMsg('naxida', data.reply, data.emotion, true);
+    }
+    if (data.audio_url) {
+      setSpeaking(true);
+      playWithLipSync(data.audio_url, () => { setSpeaking(false); setStatus('小吉祥草王 · 智慧之神'); }, false, data.emotion);
+    }
+  } catch (e) {
+    $('pwdErr').textContent = '网络错误，请重试';
+    btn.disabled = false; btn.textContent = '确认';
+  }
+};
+$('pwdInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('pwdOk').click(); });
+
+// 发送按钮
+$('sendBtn').onclick = () => sendText($('input').value);
+$('input').addEventListener('keydown', e => { if (e.key === 'Enter') sendText($('input').value); });
+
+// 麦克风
+$('micBtn').onclick = async () => {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    return;
+  }
+  // 点麦克风先打断纳西妲正在说的话（功能2）
+  interruptSpeech();
+  // 检查浏览器是否支持
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert('当前浏览器不支持麦克风，请用 Chrome/Edge 并通过 localhost 访问（不要用 IP）');
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true }
+    });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = async () => {
+      $('micBtn').classList.remove('recording');
+      setPortrait('thinking'); setStatus('识别中...');
+      const blob = new Blob(audioChunks, {type: 'audio/webm'});
+      const fd = new FormData();
+      fd.append('audio', blob, 'mic.webm');
+      try {
+        const r = await fetch('/api/asr', {method: 'POST', body: fd});
+        const data = await r.json();
+        if (data.text) {
+          const emoNote = data.user_emotion ? `（${data.user_emotion}）` : '';
+          setStatus('识别到: ' + data.text + emoNote);
+          setTimeout(() => sendText(data.text, data.user_emotion), 500);
+        } else {
+          setStatus('没听清，请再说一次');
+          setPortrait('default');
+        }
+      } catch (e) { setStatus('识别失败'); setPortrait('default'); }
+      stream.getTracks().forEach(t => t.stop());
+    };
+    mediaRecorder.start();
+    $('micBtn').classList.add('recording');
+    setStatus('● 录音中...再点一次结束');
+    setPortrait('waiting');
+    // ASR 懒加载：模型未加载时提示首次识别会较慢
+    fetch('/api/asr/status').then(r => r.json()).then(d => {
+      if (!d.loaded) setStatus('● 录音中...（首次识别需加载模型，约15秒）');
+    }).catch(() => {});
+  } catch (e) {
+    let msg = '无法访问麦克风: ' + e.name + ' - ' + e.message;
+    if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+      msg += '\n\n权限被拒绝了！请这样修复：\n1. 点地址栏左边的锁/设置图标\n2. 把麦克风改成"允许"\n3. 刷新页面（F5）';
+    } else if (e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
+      msg += '\n\n没找到麦克风设备！';
+    } else if (e.name === 'NotReadableError' || e.name === 'TrackStartError') {
+      msg += '\n\n麦克风被其他程序占用了！请关掉其他用麦克风的程序（如微信、QQ、游戏）后重试。';
+    }
+    alert(msg);
+  }
+};
+
+// ===== 参数测试面板（按 P 键切换，用于找出控制手脚的参数）=====
+function buildParamPanel() {
+  if (!live2dModel) return;
+  const core = live2dModel.internalModel.coreModel;
+  const ids = core._parameterIds;
+  let html = '<div style="padding:8px;font-size:12px">';
+  html += '<div style="margin-bottom:6px"><b>参数测试面板</b>（按P关闭）</div>';
+  html += '<input id="paramSearch" placeholder="搜索参数名..." style="width:100%;padding:3px;margin-bottom:6px;font-size:11px">';
+  html += '<button id="paramReset" style="width:100%;padding:3px;margin-bottom:8px;font-size:11px;cursor:pointer">全部重置为默认值</button>';
+  html += '<div id="paramList" style="max-height:70vh;overflow-y:auto">';
+  for (let i = 0; i < ids.length; i++) {
+    const id = ids[i];
+    const min = core._parameterMinimumValues[i];
+    const max = core._parameterMaximumValues[i];
+    const def = core.getParameterDefaultValue(i);
+    html += `<div class="param-row" data-id="${id}" style="margin-bottom:4px">
+      <div style="display:flex;justify-content:space-between"><span title="${id}">${id}</span><span id="val_${i}" style="color:#888">${def.toFixed(2)}</span></div>
+      <input type="range" min="${min}" max="${max}" step="${(max-min)/100}" value="${def}" data-idx="${i}" style="width:100%">
+    </div>`;
+  }
+  html += '</div></div>';
+  const panel = document.createElement('div');
+  panel.id = 'paramPanel';
+  panel.style.cssText = 'position:fixed;right:0;top:0;width:260px;height:100vh;background:rgba(20,20,30,0.95);color:#fff;z-index:9999;display:none;overflow:hidden';
+  panel.innerHTML = html;
+  document.body.appendChild(panel);
+
+  // 滑块事件
+  panel.querySelectorAll('input[type=range]').forEach(slider => {
+    slider.addEventListener('input', () => {
+      const idx = +slider.dataset.idx;
+      const val = parseFloat(slider.value);
+      core.setParameterValueById(ids[idx], val);
+      document.getElementById('val_' + idx).textContent = val.toFixed(2);
+    });
+  });
+  // 重置
+  document.getElementById('paramReset').addEventListener('click', () => {
+    panel.querySelectorAll('input[type=range]').forEach(slider => {
+      const idx = +slider.dataset.idx;
+      const def = core.getParameterDefaultValue(idx);
+      slider.value = def;
+      core.setParameterValueById(ids[idx], def);
+      document.getElementById('val_' + idx).textContent = def.toFixed(2);
+    });
+  });
+  // 搜索
+  document.getElementById('paramSearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    panel.querySelectorAll('.param-row').forEach(row => {
+      row.style.display = row.dataset.id.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
+}
+
+// 按 P 键切换参数面板
+let paramPanelBuilt = false;
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'p' || e.key === 'P') {
+    const panel = document.getElementById('paramPanel');
+    if (!panel) {
+      buildParamPanel();
+      paramPanelBuilt = true;
+    }
+    const p = document.getElementById('paramPanel');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  }
+});
+</script>
+</body>
+</html>

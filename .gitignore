@@ -1,0 +1,37 @@
+# 配置与密钥
+config.json
+state/
+
+# 模型与缓存
+models/
+__pycache__/
+*.pyc
+
+# 音频与归档
+audio_log/
+web/static/audio/
+*.wav
+
+# 数据库与记忆（含真实聊天记录，不上传）
+memory/*.db
+memory/*.db-*
+*.db-journal
+
+# 备份文件
+*.bak
+*.bak-*
+
+# 临时文件
+*.tmp
+*.log
+*.err
+tmp_*
+*.png
+
+# 本地脚本与个人文件
+fix_hosts.ps1
+简历项目描述.md
+
+# 音乐目录（成品音频太大）
+music/
+sk-

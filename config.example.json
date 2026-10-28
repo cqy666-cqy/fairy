@@ -1,0 +1,26 @@
+{
+  "DEEPSEEK_API_KEY": "",
+  "LLM_BASE_URL": "https://api.deepseek.com/v1",
+  "LLM_API_KEY": "",
+  "LLM_MODEL": "deepseek-chat",
+  "LLM_MODEL_LIST": [
+    "deepseek-chat"
+  ],
+  "LLM_FREE_QUOTA_TOKENS": 1000000,
+  "LLM_QUOTA_RATIO": 0.9,
+  "BOCHA_API_KEY": "",
+  "NAPCAT_WS_URL": "ws://127.0.0.1:3001",
+  "NAPCAT_TOKEN": "",
+  "OWNER_QQ": "",
+  "QQ_GROUP_AT_ONLY": true,
+  "QQ_IGNORE_LIST": [],
+  "QQ_RESTRICTED_LIST": [],
+  "QQ_GUARDED_LIST": [],
+  "QQ_DAILY_TOKENS_PER_USER": 30000,
+  "REGION": "south",
+  "CUSTOMS": {
+    "冬至": "饺子",
+    "元宵": "汤圆",
+    "小年": "腊月二十四"
+  }
+}
