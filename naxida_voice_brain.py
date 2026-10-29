@@ -1368,9 +1368,9 @@ def remember_said(text, session_id=None):
 _INJECTION_PATTERNS = re.compile(
     r"(忽略(之前|以上|上面|前面)?的(指令|提示|设定|system)|"
     r"ignore\s+(previous|above|all|the)\s+(instructions?|prompts?)|"
-    r"你现在是(什么|谁)|扮演(另一个|别的|其他)|"
-    r"system\s*prompt|你的(设定|指令|prompt)是(什么|什么)|"
-    r"忘记(你是|你的)角色|从现在开始你是)",
+    r"你现在是(另一个|别的|其他)|扮演(另一个角色|别的角色|猫娘|萝莉|御姐)|"
+    r"system\s*prompt|你的(系统提示|指令)是(什么|什么)|"
+    r"忘记(你是|你的)角色|从现在开始你是(另一个|别的|其他))",
     re.IGNORECASE,
 )
 

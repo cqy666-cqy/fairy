@@ -1071,7 +1071,7 @@ def _handle(event):
     # 发"正在输入"状态，让用户知道在回复
     if not is_group:
         try:
-            client.call_api("set_input_status", {"user_id": int(user_id), "bust": 5})
+            client.call_api("set_input_status", {"user_id": int(user_id), "bust_duration": 5000})
         except Exception:
             pass
 
@@ -1125,6 +1125,7 @@ def _handle(event):
                 if i < len(amrs) - 1:
                     time.sleep(random.uniform(0.5, 0.9))
             print(f"[QQ] 已发语音 x{len(amrs)}")
+            _last_reply[str(user_id)] = (text, reply)
             print(f"[QQ] 已回复 {who}")
             return
         print("[QQ] 语音合成/转码失败，回退文字")
